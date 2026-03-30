@@ -35,8 +35,8 @@ class RegisterTaskRequest(BaseModel):
     platform: str
     email: Optional[str] = None
     password: Optional[str] = None
-    count: int = 1
-    concurrency: int = 1
+    count: int = Field(default=1, ge=1)
+    concurrency: int = Field(default=1, ge=1, le=16)
     register_delay_seconds: float = 0
     proxy: Optional[str] = None
     executor_type: str = "protocol"
@@ -186,7 +186,7 @@ def _run_register(task_id: str, req: RegisterTaskRequest):
                 return str(e)
 
         from concurrent.futures import ThreadPoolExecutor, as_completed
-        max_workers = min(req.concurrency, req.count, 5)
+        max_workers = min(req.concurrency, 16)
         with ThreadPoolExecutor(max_workers=max_workers) as pool:
             futures = [pool.submit(_do_one, i) for i in range(req.count)]
             for f in as_completed(futures):
